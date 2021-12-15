@@ -7,8 +7,8 @@
 #
 # https://github.com/P3TERX/ssh2actions
 # File name：ngrok2actions.sh
-# Description: Connect to Github Actions VM via SSH by using ngrok
-# Version: 2.0
+# 说明: Connect to Github Actions VM via SSH by using ngrok
+# 版本: 2.0
 #
 
 Green_font_prefix="\033[32m"
@@ -23,17 +23,17 @@ TELEGRAM_LOG="/tmp/telegram.log"
 CONTINUE_FILE="/tmp/continue"
 
 if [[ -z "${NGROK_TOKEN}" ]]; then
-    echo -e "${ERROR} Please set 'NGROK_TOKEN' environment variable."
+    echo -e "${ERROR} 请设置 "NGROK_TOKEN" 环境变量."
     exit 2
 fi
 
 if [[ -z "${SSH_PASSWORD}" && -z "${SSH_PUBKEY}" && -z "${GH_SSH_PUBKEY}" ]]; then
-    echo -e "${ERROR} Please set 'SSH_PASSWORD' environment variable."
+    echo -e "${ERROR} 请设置 'SSH_PASSWORD' 环境变量."
     exit 3
 fi
 
 if [[ -n "$(uname | grep -i Linux)" ]]; then
-    echo -e "${INFO} Install ngrok ..."
+    echo -e "${INFO} 安装 ngrok ..."
     curl -fsSL https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -o ngrok.zip
     unzip ngrok.zip ngrok
     rm ngrok.zip
@@ -41,7 +41,7 @@ if [[ -n "$(uname | grep -i Linux)" ]]; then
     sudo mv ngrok /usr/local/bin
     ngrok -v
 elif [[ -n "$(uname | grep -i Darwin)" ]]; then
-    echo -e "${INFO} Install ngrok ..."
+    echo -e "${INFO} 安装 ngrok ..."
     curl -fsSL https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-darwin-amd64.zip -o ngrok.zip
     unzip ngrok.zip ngrok
     rm ngrok.zip
@@ -49,21 +49,21 @@ elif [[ -n "$(uname | grep -i Darwin)" ]]; then
     sudo mv ngrok /usr/local/bin
     ngrok -v
     USER=root
-    echo -e "${INFO} Set SSH service ..."
-    echo 'PermitRootLogin yes' | sudo tee -a /etc/ssh/sshd_config >/dev/null
+    echo -e "${INFO} 设置SSH服务 ..."
+    echo '许可证登录 yes' | sudo tee -a /etc/ssh/sshd_config >/dev/null
     sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist
     sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
 else
-    echo -e "${ERROR} This system is not supported!"
+    echo -e "${ERROR} 不支持此系统!"
     exit 1
 fi
 
 if [[ -n "${SSH_PASSWORD}" ]]; then
-    echo -e "${INFO} Set user(${USER}) password ..."
+    echo -e "${INFO} 设置用户 (${USER}) 密码 ..."
     echo -e "${SSH_PASSWORD}\n${SSH_PASSWORD}" | sudo passwd "${USER}"
 fi
 
-echo -e "${INFO} Start ngrok proxy for SSH port..."
+echo -e "${INFO} 为SSH端口启动NGROK代理..."
 screen -dmS ngrok \
     ngrok tcp 22 \
     --log "${LOG_FILE}" \
@@ -71,12 +71,12 @@ screen -dmS ngrok \
     --region "${NGROK_REGION:-us}"
 
 while ((${SECONDS_LEFT:=10} > 0)); do
-    echo -e "${INFO} Please wait ${SECONDS_LEFT}s ..."
+    echo -e "${INFO} 请稍等 ${SECONDS_LEFT}s ..."
     sleep 1
     SECONDS_LEFT=$((${SECONDS_LEFT} - 1))
 done
 
-ERRORS_LOG=$(grep "command failed" ${LOG_FILE})
+ERRORS_LOG=$(grep "命令失败" ${LOG_FILE})
 
 if [[ -e "${LOG_FILE}" && -z "${ERRORS_LOG}" ]]; then
     SSH_CMD="$(grep -oE "tcp://(.+)" ${LOG_FILE} | sed "s/tcp:\/\//ssh ${USER}@/" | sed "s/:/ -p /")"
